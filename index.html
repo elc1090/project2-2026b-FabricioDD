@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Coleta de Resíduos</title>
+
+    <!-- 1. CSS do Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        
+        /* O Leaflet exige que a div do mapa tenha uma altura definida. 
+           Aqui, definimos para ocupar 100% da altura da tela (100vh). */
+        #map {
+            height: 100vh;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 2. Onde o mapa vai ser renderizado -->
+    <div id="map"></div>
+
+   <!-- 3. JavaScript do Leaflet -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <!-- 4. JavaScript do Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // --- CONFIGURAÇÃO DO MAPA ---
+        const map = L.map('map').setView([-29.6842, -53.8069], 13);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap &copy; CARTO'
+        }).addTo(map);
+
+        // --- CONFIGURAÇÃO DO SUPABASE ---
+        const supabaseUrl = 'https://jvkfcdieamtemdmsamzu.supabase.co/rest/v1/';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2a2ZjZGllYW10ZW1kbXNhbXp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0MzcxNTcsImV4cCI6MjEwNTAxMzE1N30.NTX5O9Ien5Lff_JixqmqwneaEY3XTT54SRhAndwoOT0';
+        
+        // Inicializa o cliente do Supabase
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // --- BUSCANDO DADOS REAIS ---
+        async function carregarPontos() {
+            try {
+                // Busca todos os registros da tabela 'pontos_de_coleta'
+                const { data: pontos, error } = await supabase
+                    .from('pontos_de_coleta')
+                    .select('*');
+
+                if (error) {
+                    console.error("Erro ao buscar dados:", error);
+                    return;
+                }
+
+                // Para cada ponto encontrado no banco, cria um pino no mapa
+                pontos.forEach(ponto => {
+                    const marker = L.marker([ponto.latitude, ponto.longitude]).addTo(map);
+
+                    // Monta o balão de informação com os dados reais do banco
+                    marker.bindPopup(`
+                        <b>${ponto.nome}</b><br>
+                        ${ponto.endereco}<br><br>
+                        <b>Materiais:</b> ${ponto.materiais}<br>
+                        <b>Horário:</b> ${ponto.horario}
+                    `);
+                });
+
+            } catch (err) {
+                console.error("Erro inesperado:", err);
+            }
+        }
+
+        // Executa a função ao carregar a página
+        carregarPontos();
+    </script>
+
+</body>
+</html>
