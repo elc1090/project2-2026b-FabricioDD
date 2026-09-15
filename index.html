@@ -5,85 +5,174 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mapa de Coleta de Resíduos</title>
 
-    <!-- 1. CSS do Leaflet -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <!-- CSS do Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 
     <style>
         body {
             margin: 0;
             padding: 0;
             font-family: Arial, sans-serif;
-        }
-        
-        /* O Leaflet exige que a div do mapa tenha uma altura definida. 
-           Aqui, definimos para ocupar 100% da altura da tela (100vh). */
-        #map {
+            display: flex; /* Divide a tela em duas partes */
             height: 100vh;
-            width: 100%;
         }
+
+        /* Menu lateral para o formulário */
+        #sidebar {
+            width: 350px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        #map {
+            flex-grow: 1; /* O mapa ocupa o resto da tela */
+        }
+
+        /* Estilos básicos do formulário */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px;}
+        input, textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;}
+        button { width: 100%; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;}
+        button:hover { background-color: #218838; }
+        .dica { font-size: 12px; color: #666; margin-top: 2px;}
     </style>
 </head>
 <body>
 
-    <!-- 2. Onde o mapa vai ser renderizado -->
+    <!-- PAINEL LATERAL (Formulário) -->
+    <div id="sidebar">
+        <h2>Cadastrar Ecoponto</h2>
+        <form id="formCadastro">
+            <div class="form-group">
+                <label>Nome do Local</label>
+                <input type="text" id="nome" required placeholder="Ex: Ecoponto Centro">
+            </div>
+            
+            <div class="form-group">
+                <label>Endereço</label>
+                <input type="text" id="endereco" required placeholder="Rua, número, bairro">
+            </div>
+
+            <div class="form-group">
+                <label>Latitude</label>
+                <input type="number" step="any" id="latitude" required readonly>
+                <div class="dica">👆 Clique no mapa para preencher</div>
+            </div>
+
+            <div class="form-group">
+                <label>Longitude</label>
+                <input type="number" step="any" id="longitude" required readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Materiais Aceitos</label>
+                <input type="text" id="materiais" required placeholder="Vidro, papel, plástico, eletrônicos">
+            </div>
+
+            <div class="form-group">
+                <label>Horário de Funcionamento</label>
+                <input type="text" id="horario" required placeholder="Seg-Sex, 08h às 18h">
+            </div>
+
+            <button type="submit" id="btnSalvar">Salvar no Banco</button>
+        </form>
+    </div>
+
+    <!-- MAPA -->
     <div id="map"></div>
 
-   <!-- 3. JavaScript do Leaflet -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-    
-    <!-- 4. JavaScript do Supabase -->
+    <!-- Bibliotecas JS (Leaflet e Supabase) -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
-        // --- CONFIGURAÇÃO DO MAPA ---
-        const map = L.map('map').setView([-29.6842, -53.8069], 13);
+        // 1. CONFIGURAÇÃO DO SUPABASE (COLE SUAS CHAVES AQUI)
+        const supabaseUrl = 'https://jvkfcdieamtemdmsamzu.supabase.co';
+        const supabaseKey = 'sb_publishable_73jHJO_ez-Pv5tYwXdbYfA_8K2R0VgU';
+        
+        // CORREÇÃO: Mudamos o nome da variável para supabaseClient
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        // 2. CONFIGURAÇÃO DO MAPA
+        const map = L.map('map').setView([-29.6842, -53.8069], 13);
+        
+        // Ajuste de layout para garantir que o mapa carregue o tamanho correto
+        setTimeout(function() {
+            map.invalidateSize();
+        }, 100);
+
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
             maxZoom: 19,
-            attribution: '&copy; OpenStreetMap &copy; CARTO'
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012'
         }).addTo(map);
 
-        // --- CONFIGURAÇÃO DO SUPABASE ---
-        const supabaseUrl = 'https://jvkfcdieamtemdmsamzu.supabase.co/rest/v1/';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2a2ZjZGllYW10ZW1kbXNhbXp1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0MzcxNTcsImV4cCI6MjEwNTAxMzE1N30.NTX5O9Ien5Lff_JixqmqwneaEY3XTT54SRhAndwoOT0';
-        
-        // Inicializa o cliente do Supabase
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        // 3. EVENTO: CLIQUE NO MAPA PARA PEGAR COORDENADAS
+        let marcadorTemporario = null;
+        map.on('click', function(e) {
+            document.getElementById('latitude').value = e.latlng.lat;
+            document.getElementById('longitude').value = e.latlng.lng;
 
-        // --- BUSCANDO DADOS REAIS ---
+            if (marcadorTemporario) { map.removeLayer(marcadorTemporario); }
+            marcadorTemporario = L.marker(e.latlng).addTo(map)
+                .bindPopup("Novo ponto selecionado!").openPopup();
+        });
+
+        // 4. FUNÇÃO: BUSCAR E EXIBIR PONTOS CADASTRADOS
         async function carregarPontos() {
-            try {
-                // Busca todos os registros da tabela 'pontos_de_coleta'
-                const { data: pontos, error } = await supabase
-                    .from('pontos_de_coleta')
-                    .select('*');
+            // CORREÇÃO: Usando supabaseClient
+            const { data, error } = await supabaseClient.from('pontos_de_coleta').select('*');
+            if (error) return console.error("Erro ao buscar:", error);
 
-                if (error) {
-                    console.error("Erro ao buscar dados:", error);
-                    return;
-                }
-
-                // Para cada ponto encontrado no banco, cria um pino no mapa
-                pontos.forEach(ponto => {
-                    const marker = L.marker([ponto.latitude, ponto.longitude]).addTo(map);
-
-                    // Monta o balão de informação com os dados reais do banco
-                    marker.bindPopup(`
+            data.forEach(ponto => {
+                L.marker([ponto.latitude, ponto.longitude]).addTo(map)
+                    .bindPopup(`
                         <b>${ponto.nome}</b><br>
                         ${ponto.endereco}<br><br>
                         <b>Materiais:</b> ${ponto.materiais}<br>
                         <b>Horário:</b> ${ponto.horario}
                     `);
-                });
-
-            } catch (err) {
-                console.error("Erro inesperado:", err);
-            }
+            });
         }
 
-        // Executa a função ao carregar a página
+        // 5. EVENTO: SALVAR NOVO PONTO NO BANCO
+        document.getElementById('formCadastro').addEventListener('submit', async function(e) {
+            e.preventDefault(); 
+            
+            const btn = document.getElementById('btnSalvar');
+            btn.innerText = "Salvando...";
+
+            // Coleta os dados e força as coordenadas a serem números (float)
+            const novoPonto = {
+                nome: document.getElementById('nome').value,
+                endereco: document.getElementById('endereco').value,
+                latitude: parseFloat(document.getElementById('latitude').value),
+                longitude: parseFloat(document.getElementById('longitude').value),
+                materiais: document.getElementById('materiais').value,
+                horario: document.getElementById('horario').value
+            };
+
+            console.log("Tentando enviar os seguintes dados:", novoPonto);
+
+            const { data, error } = await supabaseClient.from('pontos_de_coleta').insert([novoPonto]);
+
+            if (error) {
+                // Agora o alerta vai mostrar EXATAMENTE o que o Supabase reclamou
+                alert("O Supabase recusou os dados. Erro: " + error.message);
+                console.error("ERRO COMPLETO DO SUPABASE:", error);
+            } else {
+                alert("Ponto cadastrado com sucesso!");
+                document.getElementById('formCadastro').reset(); 
+                if (marcadorTemporario) { map.removeLayer(marcadorTemporario); } 
+                carregarPontos(); 
+            }
+            
+            btn.innerText = "Salvar no Banco";
+        });
+
         carregarPontos();
     </script>
-
 </body>
 </html>
