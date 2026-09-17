@@ -26,8 +26,7 @@
         .btn-editar { background-color: #ffc107; color: black; }
         .btn-excluir { background-color: #dc3545; }
 
-        /* Estilo do pinos de Rota */
-        .icone-partida, .icone-destino {
+        .icone-partida {
             border: 2px solid white;
             border-radius: 50%;
             display: flex;
@@ -36,6 +35,26 @@
             font-size: 18px; /* Tamanho do emoji */
             box-shadow: 0 2px 5px rgba(0,0,0,0.5);
             background-color: #28a745; /* Verde */
+        }
+
+        #btnLimparRota {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000; /* Garante que fique por cima do mapa */
+            background-color: #dc3545;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            display: none; /* Começa escondido, só aparece quando tiver rota */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            width: auto;
+        }
+        #btnLimparRota:hover { background-color: #c82333; }
+        .leaflet-routing-container {
+            display: none !important;
         }
     </style>
 </head>
@@ -75,6 +94,7 @@
     </div>
 
     <div id="map"></div>
+    <button id="btnLimparRota" onclick="limparRota()">Cancelar Rota</button>
 
     <!-- Bibliotecas JS: Leaflet, Routing Machine e Supabase -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
@@ -224,9 +244,18 @@
                     }
 
                 }).addTo(map);
+                document.getElementById('btnLimparRota').style.display = 'block';
             }, () => {
                 alert("Permissão de localização é necessária para traçar a rota.");
             });
+        }
+
+        window.limparRota = function() {
+            if (controleRota) {
+                map.removeControl(controleRota);
+                controleRota = null; // Zera a variável
+            }
+            document.getElementById('btnLimparRota').style.display = 'none'; // Esconde o botão
         }
 
         window.deletarPonto = async function(id) {
