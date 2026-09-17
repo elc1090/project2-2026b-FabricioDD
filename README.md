@@ -1,6 +1,6 @@
 # Projeto: Aplicação com persistência de dados em backend
 
-(./projeto-demo.gif   "GIF animado mostrando a navegação no mapa, cadastro de ecoponto e traçado de rotas.")
+(./GIF.gif   "GIF animado mostrando a navegação no mapa, cadastro de ecoponto e traçado de rotas.")
 
 ## Acesso
 
@@ -29,8 +29,6 @@ O sistema conta com visualização em mapa, geolocalização do usuário e cálc
 **"Tá OK."**<br>
 Arthur Moro,2026.
 
----
-
 ## Desenvolvimento
 
 ### Processo
@@ -49,8 +47,6 @@ Durante o desenvolvimento, enfrentei e resolvi diversos desafios técnicos reais
 
 5. **CRUD Completo e Persistência:** Tratei o comportamento padrão de envio do formulário, garantindo requisições para inserção (`INSERT`), atualização (`UPDATE`) e remoção (`DELETE`) de registros via cliente do Supabase, com atualização em tempo real da camada do mapa.
 
----
-
 ## Trechos de código
 
 ### 1. Captura de coordenadas ao clicar no mapa e marcador temporário
@@ -67,7 +63,7 @@ map.on('click', function(e) {
 });
 </code>
 
-###2. Alternância dinâmica de marcadores conforme o nível de zoom
+### 2. Alternância dinâmica de marcadores conforme o nível de zoom
 
 <code>
 // Alterna entre pinos completos e pequenos pontos para não poluir o mapa em zoom distante
@@ -84,7 +80,7 @@ function atualizarVisualizacaoZoom() {
 map.on('zoomend', atualizarVisualizacaoZoom);
 </code>
 
-###3. Traçado de rotas com marcadores HTML totalmente personalizados
+### 3. Traçado de rotas com marcadores HTML totalmente personalizados
 
 <code>
 // Cria a rota viária utilizando a localização atual do usuário
@@ -111,10 +107,10 @@ controleRota = L.Routing.control({
 ## Tecnologias
 ### Linguagens e afins
 
-    **HTML & CSS;**
+    **HTML & CSS**;
 
-    **JavaScript;**
-
+    **JavaScript**;
+    
     **Leaflet.js (v1.9.4):** Biblioteca open-source para renderização e interatividade de mapas;
 
     **Leaflet Routing Machine:** Plugin de roteamento viário baseado em OSRM (Open Source Routing Machine).
