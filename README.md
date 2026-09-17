@@ -1,6 +1,6 @@
 # Projeto: Aplicação com persistência de dados em backend
 
-(./GIF.gif   "GIF animado mostrando a navegação no mapa, cadastro de ecoponto e traçado de rotas.")
+(./site.gif   "GIF do projeto.")
 
 ## Acesso
 
@@ -56,7 +56,6 @@ map.on('click', function(e) {
     document.getElementById('latitude').value = e.latlng.lat;
     document.getElementById('longitude').value = e.latlng.lng;
 
-    // Remove o pino de seleção anterior e adiciona o novo
     if (marcadorTemporario) { map.removeLayer(marcadorTemporario); }
     marcadorTemporario = L.marker(e.latlng).addTo(map)
         .bindPopup("Posição selecionada").openPopup();
@@ -105,40 +104,41 @@ controleRota = L.Routing.control({
 ---
 
 ## Tecnologias
+
 ### Linguagens e afins
 
-    **HTML & CSS**;
+**HTML & CSS**;
 
-    **JavaScript**;
-    
-    **Leaflet.js (v1.9.4):** Biblioteca open-source para renderização e interatividade de mapas;
+**JavaScript**;
 
-    **Leaflet Routing Machine:** Plugin de roteamento viário baseado em OSRM (Open Source Routing Machine).
+**Leaflet.js (v1.9.4):** Biblioteca open-source para renderização e interatividade de mapas;
 
-    **Supabase:** Cliente para conexão direta com o banco relacional PostgreSQL via API REST.
+**Leaflet Routing Machine:** Plugin de roteamento viário baseado em OSRM (Open Source Routing Machine).
 
-    **Provedores de Tiles:** Esri ArcGIS e Open Street Map.
+**Supabase:** Cliente para conexão direta com o banco relacional PostgreSQL via API REST.
+
+**Provedores de Tiles:** Esri ArcGIS e Open Street Map.
 
 ### Ambiente de desenvolvimento
 
-    **IDE:** Visual Studio Code (VS Code)
+**IDE:** Visual Studio Code (VS Code)
 
-    **Servidor de Desenvolvimento Local:** Extensão Live Server
+**Servidor de Desenvolvimento Local:** Extensão Live Server
 
-    **Gerenciador de Banco de Dados:** Painel Administrativo Supabase
+**Gerenciador de Banco de Dados:** Painel Administrativo Supabase
 
-    **Navegador:** Libre Wolf, Google Chrome
+**Navegador:** Libre Wolf, Google Chrome
 
 ---
 
 ## Referências e créditos
 
-    **Leaflet.js Documentation:** https://leafletjs.com/reference.html
+**Leaflet.js Documentation:** https://leafletjs.com/reference.html
 
-    **Supabase JavaScript Client Docs:** https://supabase.com/docs/reference/javascript
+**Supabase JavaScript Client Docs:** https://supabase.com/docs/reference/javascript
 
-    **Leaflet Routing Machine Tutorial:** https://www.gisatcontent.com/leaflet-routing-machine/
+**Leaflet Routing Machine Tutorial:** https://www.gisatcontent.com/leaflet-routing-machine/
 
-    **Esri ArcGIS Tiles Service:** https://www.esri.com/
+**Esri ArcGIS Tiles Service:** https://www.esri.com/
 
-    **OpenStreetMap:** Dados de mapa e imagens (tiles) cedidos por © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) sob a licença ODbL.
+**OpenStreetMap:** Dados de mapa e imagens (tiles) cedidos por © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) sob a licença ODbL.
