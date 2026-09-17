@@ -1,6 +1,6 @@
 # Projeto: Aplicação com persistência de dados em backend
 
-(./site.gif   "GIF do projeto.")
+![Demo](./site.gif   "GIF do projeto.")
 
 ## Acesso
 
