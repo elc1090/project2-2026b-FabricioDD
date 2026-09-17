@@ -1,6 +1,6 @@
 # Projeto: Mapeamento de Pontos de Coleta de Resíduos Recicláveis
 
-!(./projeto-demo.gif "GIF animado mostrando a navegação no mapa, cadastro de ecoponto e traçado de rotas")
+(./projeto-demo.gif "GIF animado mostrando a navegação no mapa, cadastro de ecoponto e traçado de rotas")
 
 ## Acesso
 
@@ -24,7 +24,8 @@ O sistema conta com visualização em mapa, geolocalização do usuário e cálc
 
 ## Feedback/comentário da parceria/cliente/usuário
 
-"[Substitua este texto pelo feedback recebido do seu parceiro/cliente sobre as funcionalidades, interface do mapa e usabilidade do sistema de rotas.]"
+**"Tá OK."**
+Arthur Moro,2026.
 
 ---
 
@@ -36,22 +37,20 @@ Para este projeto, optei por Vanilla JS (JavaScript Puro) no Frontend e o Supaba
 
 Durante o desenvolvimento, enfrentei e resolvi diversos desafios técnicos reais:
 
-1. **Escolha do Provedor de Mapas:** Inicialmente, tentei utilizar o OpenStreetMap e o CartoDB como provedores de blocos (*tiles*). No entanto, deparei-me com bloqueios de política de uso do servidor voluntário do OSM em ambiente de desenvolvimento local (`127.0.0.1` do Live Server) e exigência de chave de API do CartoDB. Solucionei o problema migrando para os servidores da **Esri (ArcGIS)**.
+1. **Escolha do Provedor de Mapas:** Inicialmente, tentei utilizar o OpenStreetMap e o CartoDB como provedores de blocos (*tiles*). No entanto, devido a bloqueios de política de uso do servidor voluntário do OSM em ambiente de desenvolvimento local (`127.0.0.1` do Live Server) e exigência de chave de API do CartoDB. Solucionei o problema migrando para os servidores da **Esri (ArcGIS)**. Mais tarde, solucionei o problema com OpenStreetMap (troquei o navegador).
 
 2. **Captura de Coordenadas e Usabilidade:** Para facilitar o cadastro pelo usuário sem exigir a digitação manual de coordenadas, implementei um evento de clique no mapa (`map.on('click')`) que captura a latitude e longitude exatas e preenche automaticamente os campos do formulário lateral.
 
-3. **Gerenciamento de Zoom e Desempenho Visual:** Quando a visão do mapa está muito afastada (nível global/nacional), múltiplos pinos padrão podem poluir a tela. Desenvolvi uma lógica no evento `zoomend` que alterna dinamicamente os marcadores: em zoom distante (nível < 8), os locais são exibidos como pequenos círculos minimalistas (`L.circleMarker`); em zoom próximo, revertem para pinos completos (`L.marker`) com balões informativos.
+3. **Gerenciamento de Zoom e Desempenho Visual:** Quando a visão do mapa está muito afastada (nível global/nacional), múltiplos pinos padrão podem poluir a tela. Desenvolvi uma lógica no evento `zoomend` que alterna dinamicamente os marcadores: em zoom distante (nível < 8), os locais são exibidos como pequenos círculos(`L.circleMarker`); em zoom próximo, revertem para pinos completos (`L.marker`) com balões informativos.
 
-4. **Sistema de Rotas e Geolocalização:** Integrei a API nativa de Geolocalização do navegador para centralizar o mapa no usuário e utilizei o plugin *Leaflet Routing Machine* acoplado ao servidor OSRM para traçar trajetos viários. Personalizei a experiência estilizando os ícones de partida (pedestre verde 🚶) e destino (bandeira azul 🏁) utilizando ícones HTML (`L.divIcon`).
+4. **Sistema de Rotas e Geolocalização:** Integrei a API nativa de Geolocalização do navegador para centralizar o mapa no usuário e utilizei o plugin *Leaflet Routing Machine* acoplado ao servidor OSRM para traçar trajetos automotivos. Modifiquei algumas pequenas coisas, como o icone do ponto de saída e botão para apagar a rota.
 
-5. **CRUD Completo e Persistência:** Tratei o comportamento padrão de envio do formulário com `e.preventDefault()`, garantindo requisições assíncronas (`async/await`) para inserção (`INSERT`), atualização (`UPDATE`) e remoção (`DELETE`) de registros via cliente do Supabase, com atualização em tempo real da camada do mapa.
+5. **CRUD Completo e Persistência:** Tratei o comportamento padrão de envio do formulário, garantindo requisições para inserção (`INSERT`), atualização (`UPDATE`) e remoção (`DELETE`) de registros via cliente do Supabase, com atualização em tempo real da camada do mapa.
 
----
+## Trechos de código
 
-### Trechos de código
-
-#### 1. Captura de coordenadas ao clicar no mapa e marcador temporário
-
+### 1. Captura de coordenadas ao clicar no mapa e marcador temporário
+<code><pre>
 // Preenche o formulário com a latitude/longitude do ponto clicado pelo usuário
 map.on('click', function(e) {
     document.getElementById('latitude').value = e.latlng.lat;
@@ -62,9 +61,11 @@ map.on('click', function(e) {
     marcadorTemporario = L.marker(e.latlng).addTo(map)
         .bindPopup("Posição selecionada").openPopup();
 });
+</pre></code>
 
-####2. Alternância dinâmica de marcadores conforme o nível de zoom
+###2. Alternância dinâmica de marcadores conforme o nível de zoom
 
+<code><pre>
 // Alterna entre pinos completos e pequenos pontos para não poluir o mapa em zoom distante
 function atualizarVisualizacaoZoom() {
     const zoomAtual = map.getZoom();
@@ -77,9 +78,11 @@ function atualizarVisualizacaoZoom() {
     }
 }
 map.on('zoomend', atualizarVisualizacaoZoom);
+</pre></code>
 
-####3. Traçado de rotas com marcadores HTML totalmente personalizados
+###3. Traçado de rotas com marcadores HTML totalmente personalizados
 
+<code><pre>
 // Cria a rota viária utilizando a localização atual do usuário
 controleRota = L.Routing.control({
     waypoints: [ L.latLng(latOrigem, lngOrigem), L.latLng(latDestino, lngDestino) ],
@@ -97,38 +100,39 @@ controleRota = L.Routing.control({
         return L.marker(waypoint.latLng, { draggable: true, icon: icone });
     }
 }).addTo(map);
+</pre></code>
 
 ##Tecnologias
 ###Linguagens e afins
 
-    HTML & CSS;
+    **HTML & CSS;**
 
-    JavaScript;
+    **JavaScript;**
 
-    Leaflet.js (v1.9.4): Biblioteca open-source para renderização e interatividade de mapas;
+    **Leaflet.js (v1.9.4):** Biblioteca open-source para renderização e interatividade de mapas;
 
-    Leaflet Routing Machine: Plugin de roteamento viário baseado em OSRM (Open Source Routing Machine).
+    **Leaflet Routing Machine:** Plugin de roteamento viário baseado em OSRM (Open Source Routing Machine).
 
-    Supabase JS Client (v2): Cliente para conexão direta com o banco relacional PostgreSQL via API REST.
+    **Supabase:** Cliente para conexão direta com o banco relacional PostgreSQL via API REST.
 
-    Provedores de Tiles: Esri ArcGIS (World Street Map / Imagery) e CartoDB (Positron / Dark Matter).
+    **Provedores de Tiles:** Esri ArcGIS e Open Street Map.
 
 ###Ambiente de desenvolvimento
 
-    IDE: Visual Studio Code (VS Code)
+    **IDE:** Visual Studio Code (VS Code)
 
-    Servidor de Desenvolvimento Local: Extensão Live Server
+    **Servidor de Desenvolvimento Local:** Extensão Live Server
 
-    Gerenciador de Banco de Dados: Painel Administrativo / SQL Editor do Supabase
+    **Gerenciador de Banco de Dados:** Painel Administrativo Supabase
 
-    Navegador: Libre Wolf
+    **Navegador:** Libre Wolf, Google Chrome
 
 ##Referências e créditos
 
-    Leaflet.js Documentation: https://leafletjs.com/reference.html
+    **Leaflet.js Documentation:** https://leafletjs.com/reference.html
 
-    Supabase JavaScript Client Docs: https://supabase.com/docs/reference/javascript
+    **Supabase JavaScript Client Docs:** https://supabase.com/docs/reference/javascript
 
-    Leaflet Routing Machine Tutorial: https://www.gisatcontent.com/leaflet-routing-machine/
+    **Leaflet Routing Machine Tutorial:** https://www.gisatcontent.com/leaflet-routing-machine/
 
-    Esri ArcGIS Tiles Service: https://www.esri.com/
+    **Esri ArcGIS Tiles Service:** https://www.esri.com/
