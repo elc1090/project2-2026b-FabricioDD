@@ -1,6 +1,6 @@
-# Projeto: Mapeamento de Pontos de Coleta de Resíduos Recicláveis
+# Projeto: Aplicação com persistência de dados em backend
 
-(./projeto-demo.gif "GIF animado mostrando a navegação no mapa, cadastro de ecoponto e traçado de rotas")
+(./projeto-demo.gif   "GIF animado mostrando a navegação no mapa, cadastro de ecoponto e traçado de rotas.")
 
 ## Acesso
 
@@ -11,6 +11,8 @@
 
 - **Nome:** Fabricio Thomas Freitas Santos
 - **Curso:** Sistemas de Informação - UFSM
+
+---
 
 ## Proposta
 
@@ -24,7 +26,7 @@ O sistema conta com visualização em mapa, geolocalização do usuário e cálc
 
 ## Feedback/comentário da parceria/cliente/usuário
 
-**"Tá OK."**
+**"Tá OK."**<br>
 Arthur Moro,2026.
 
 ---
@@ -33,7 +35,7 @@ Arthur Moro,2026.
 
 ### Processo
 
-Para este projeto, optei por Vanilla JS (JavaScript Puro) no Frontend e o Supabase (PostgreSQL) no Backend. Essa combinação eliminou muitas das complexidades de gerenciar um servidor dedicado, garantindo a persistência de dados em um banco relacional robusto com API nativa e custo zero de infraestrutura.
+Para este projeto, optei por Vanilla JS (JavaScript Puro) no Frontend e o Supabase (PostgreSQL) no Backend. Essa combinação eliminou muitas das complexidades de gerenciar um servidor dedicado, garantindo a persistência de dados em um banco relacional com API nativa e infraestrutura gratuita.
 
 Durante o desenvolvimento, enfrentei e resolvi diversos desafios técnicos reais:
 
@@ -47,10 +49,12 @@ Durante o desenvolvimento, enfrentei e resolvi diversos desafios técnicos reais
 
 5. **CRUD Completo e Persistência:** Tratei o comportamento padrão de envio do formulário, garantindo requisições para inserção (`INSERT`), atualização (`UPDATE`) e remoção (`DELETE`) de registros via cliente do Supabase, com atualização em tempo real da camada do mapa.
 
+---
+
 ## Trechos de código
 
 ### 1. Captura de coordenadas ao clicar no mapa e marcador temporário
-<code><pre>
+<code>
 // Preenche o formulário com a latitude/longitude do ponto clicado pelo usuário
 map.on('click', function(e) {
     document.getElementById('latitude').value = e.latlng.lat;
@@ -61,11 +65,11 @@ map.on('click', function(e) {
     marcadorTemporario = L.marker(e.latlng).addTo(map)
         .bindPopup("Posição selecionada").openPopup();
 });
-</pre></code>
+</code>
 
 ###2. Alternância dinâmica de marcadores conforme o nível de zoom
 
-<code><pre>
+<code>
 // Alterna entre pinos completos e pequenos pontos para não poluir o mapa em zoom distante
 function atualizarVisualizacaoZoom() {
     const zoomAtual = map.getZoom();
@@ -78,11 +82,11 @@ function atualizarVisualizacaoZoom() {
     }
 }
 map.on('zoomend', atualizarVisualizacaoZoom);
-</pre></code>
+</code>
 
 ###3. Traçado de rotas com marcadores HTML totalmente personalizados
 
-<code><pre>
+<code>
 // Cria a rota viária utilizando a localização atual do usuário
 controleRota = L.Routing.control({
     waypoints: [ L.latLng(latOrigem, lngOrigem), L.latLng(latDestino, lngDestino) ],
@@ -100,10 +104,12 @@ controleRota = L.Routing.control({
         return L.marker(waypoint.latLng, { draggable: true, icon: icone });
     }
 }).addTo(map);
-</pre></code>
+</code>
 
-##Tecnologias
-###Linguagens e afins
+---
+
+## Tecnologias
+### Linguagens e afins
 
     **HTML & CSS;**
 
@@ -117,7 +123,7 @@ controleRota = L.Routing.control({
 
     **Provedores de Tiles:** Esri ArcGIS e Open Street Map.
 
-###Ambiente de desenvolvimento
+### Ambiente de desenvolvimento
 
     **IDE:** Visual Studio Code (VS Code)
 
@@ -127,7 +133,9 @@ controleRota = L.Routing.control({
 
     **Navegador:** Libre Wolf, Google Chrome
 
-##Referências e créditos
+---
+
+## Referências e créditos
 
     **Leaflet.js Documentation:** https://leafletjs.com/reference.html
 
@@ -136,3 +144,5 @@ controleRota = L.Routing.control({
     **Leaflet Routing Machine Tutorial:** https://www.gisatcontent.com/leaflet-routing-machine/
 
     **Esri ArcGIS Tiles Service:** https://www.esri.com/
+
+    **OpenStreetMap:** Dados de mapa e imagens (tiles) cedidos por © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) sob a licença ODbL.
