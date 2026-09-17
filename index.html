@@ -5,147 +5,240 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mapa de Coleta de Resíduos</title>
 
-    <!-- CSS do Leaflet -->
+    <!-- CSS do Leaflet e do Leaflet Routing Machine -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
 
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            display: flex; /* Divide a tela em duas partes */
-            height: 100vh;
-        }
-
-        /* Menu lateral para o formulário */
-        #sidebar {
-            width: 350px;
-            padding: 20px;
-            background-color: #f8f9fa;
-            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-            z-index: 1000;
-            overflow-y: auto;
-        }
-
-        #map {
-            flex-grow: 1; /* O mapa ocupa o resto da tela */
-        }
-
-        /* Estilos básicos do formulário */
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; display: flex; height: 100vh; }
+        #sidebar { width: 350px; padding: 20px; background-color: #f8f9fa; box-shadow: 2px 0 5px rgba(0,0,0,0.1); z-index: 1000; overflow-y: auto; }
+        #map { flex-grow: 1; }
         .form-group { margin-bottom: 15px; }
         label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px;}
         input, textarea { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;}
-        button { width: 100%; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;}
+        button { width: 100%; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 5px;}
         button:hover { background-color: #218838; }
+        #btnCancelarEdicao { background-color: #dc3545; display: none; } 
         .dica { font-size: 12px; color: #666; margin-top: 2px;}
+        
+        .popup-btn { padding: 5px; margin-top: 5px; width: 100%; font-size: 12px; cursor: pointer; border: none; border-radius: 3px; color: white; }
+        .btn-rota { background-color: #007bff; }
+        .btn-editar { background-color: #ffc107; color: black; }
+        .btn-excluir { background-color: #dc3545; }
+
     </style>
 </head>
 <body>
 
-    <!-- PAINEL LATERAL (Formulário) -->
     <div id="sidebar">
-        <h2>Cadastrar Ecoponto</h2>
+        <h2 id="tituloForm">Cadastrar Ecoponto</h2>
         <form id="formCadastro">
             <div class="form-group">
                 <label>Nome do Local</label>
-                <input type="text" id="nome" required placeholder="Ex: Ecoponto Centro">
+                <input type="text" id="nome" required>
             </div>
-            
             <div class="form-group">
                 <label>Endereço</label>
-                <input type="text" id="endereco" required placeholder="Rua, número, bairro">
+                <input type="text" id="endereco" required>
             </div>
-
             <div class="form-group">
                 <label>Latitude</label>
                 <input type="number" step="any" id="latitude" required readonly>
                 <div class="dica">👆 Clique no mapa para preencher</div>
             </div>
-
             <div class="form-group">
                 <label>Longitude</label>
                 <input type="number" step="any" id="longitude" required readonly>
             </div>
-
             <div class="form-group">
                 <label>Materiais Aceitos</label>
-                <input type="text" id="materiais" required placeholder="Vidro, papel, plástico, eletrônicos">
+                <input type="text" id="materiais" required>
             </div>
-
             <div class="form-group">
                 <label>Horário de Funcionamento</label>
-                <input type="text" id="horario" required placeholder="Seg-Sex, 08h às 18h">
+                <input type="text" id="horario" required>
             </div>
-
             <button type="submit" id="btnSalvar">Salvar no Banco</button>
+            <button type="button" id="btnCancelarEdicao" onclick="cancelarEdicao()">Cancelar Edição</button>
         </form>
     </div>
 
-    <!-- MAPA -->
     <div id="map"></div>
 
-    <!-- Bibliotecas JS (Leaflet e Supabase) -->
+    <!-- Bibliotecas JS: Leaflet, Routing Machine e Supabase -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
-        // 1. CONFIGURAÇÃO DO SUPABASE (COLE SUAS CHAVES AQUI)
+        // 1. CONFIGURAÇÃO DO SUPABASE
         const supabaseUrl = 'https://jvkfcdieamtemdmsamzu.supabase.co';
         const supabaseKey = 'sb_publishable_73jHJO_ez-Pv5tYwXdbYfA_8K2R0VgU';
-        
-        // CORREÇÃO: Mudamos o nome da variável para supabaseClient
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         // 2. CONFIGURAÇÃO DO MAPA
-        const map = L.map('map').setView([-29.6842, -53.8069], 13);
-        
-        // Ajuste de layout para garantir que o mapa carregue o tamanho correto
-        setTimeout(function() {
-            map.invalidateSize();
-        }, 100);
+        const map = L.map('map').setView([0, 0], 2); // Inicia global
+        setTimeout(function() { map.invalidateSize(); }, 100);
 
         L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-            maxZoom: 19,
-            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012'
+            maxZoom: 19, attribution: 'Tiles &copy; Esri'
         }).addTo(map);
 
-        // 3. EVENTO: CLIQUE NO MAPA PARA PEGAR COORDENADAS
+        // Grupos separados para Pinos (Zoom perto) e Pontinhos (Zoom Longe)
+        const layerPinos = L.layerGroup().addTo(map);
+        const layerPontinhos = L.layerGroup(); 
+
+        // Variáveis globais
         let marcadorTemporario = null;
+        let controleRota = null;
+        let idEditando = null; 
+        let pontosGlobais = []; 
+
+        // 3. FUNÇÃO: VERIFICAR ZOOM E ALTERNAR ÍCONES
+        function atualizarVisualizacaoZoom() {
+            const zoomAtual = map.getZoom();
+            if (zoomAtual < 8) {
+                // Muito longe: mostra pontinhos
+                if (map.hasLayer(layerPinos)) map.removeLayer(layerPinos);
+                if (!map.hasLayer(layerPontinhos)) map.addLayer(layerPontinhos);
+            } else {
+                // Perto: mostra pinos normais
+                if (!map.hasLayer(layerPinos)) map.addLayer(layerPinos);
+                if (map.hasLayer(layerPontinhos)) map.removeLayer(layerPontinhos);
+            }
+        }
+        
+        // Sempre que o zoom mudar, chama a função
+        map.on('zoomend', atualizarVisualizacaoZoom);
+
+        // 4. FUNÇÃO: GEOLOCALIZAÇÃO
+        function iniciarLocalizacao() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        map.setView([lat, lng], 13);
+                        L.circleMarker([lat, lng], { color: 'blue', radius: 8, fillOpacity: 0.5 })
+                            .addTo(map).bindPopup("Você está aqui!").openPopup();
+                    },
+                    error => {
+                        console.warn("Geolocalização negada/falhou.");
+                        map.setView([0, 0], 2);
+                    },
+                    { timeout: 5000 }
+                );
+            }
+        }
+
+        // 5. EVENTO: CLIQUE NO MAPA (Para formulário)
         map.on('click', function(e) {
             document.getElementById('latitude').value = e.latlng.lat;
             document.getElementById('longitude').value = e.latlng.lng;
-
             if (marcadorTemporario) { map.removeLayer(marcadorTemporario); }
-            marcadorTemporario = L.marker(e.latlng).addTo(map)
-                .bindPopup("Novo ponto selecionado!").openPopup();
+            marcadorTemporario = L.marker(e.latlng).addTo(map).bindPopup("Nova posição").openPopup();
         });
 
-        // 4. FUNÇÃO: BUSCAR E EXIBIR PONTOS CADASTRADOS
+        // 6. FUNÇÃO: BUSCAR DADOS DO SUPABASE
         async function carregarPontos() {
-            // CORREÇÃO: Usando supabaseClient
-            const { data, error } = await supabaseClient.from('pontos_de_coleta').select('*');
-            if (error) return console.error("Erro ao buscar:", error);
+            try {
+                const { data, error } = await supabaseClient.from('pontos_de_coleta').select('*');
+                if (error) throw error; 
 
-            data.forEach(ponto => {
-                L.marker([ponto.latitude, ponto.longitude]).addTo(map)
-                    .bindPopup(`
+                pontosGlobais = data;
+                layerPinos.clearLayers(); 
+                layerPontinhos.clearLayers();
+
+                data.forEach(ponto => {
+                    // Monta o pino principal
+                    const pino = L.marker([ponto.latitude, ponto.longitude]);
+                    pino.bindPopup(`
                         <b>${ponto.nome}</b><br>
                         ${ponto.endereco}<br><br>
                         <b>Materiais:</b> ${ponto.materiais}<br>
-                        <b>Horário:</b> ${ponto.horario}
+                        <b>Horário:</b> ${ponto.horario}<br><br>
+                        <button class="popup-btn btn-rota" onclick="tracarRota(${ponto.latitude}, ${ponto.longitude})">🗺️ Traçar Rota</button>
+                        <button class="popup-btn btn-editar" onclick="prepararEdicao('${ponto.id}')">✏️ Editar</button>
+                        <button class="popup-btn btn-excluir" onclick="deletarPonto('${ponto.id}')">🗑️ Excluir</button>
                     `);
+                    layerPinos.addLayer(pino);
+
+                    // Monta o círculo (zoom longe)
+                    const pontinho = L.circleMarker([ponto.latitude, ponto.longitude], {
+                        radius: 5, color: '#28a745', fillColor: '#28a745', fillOpacity: 0.8, weight: 1
+                    }).bindTooltip(ponto.nome);
+                    layerPontinhos.addLayer(pontinho);
+                });
+
+                // Força a checagem de qual camada mostrar logo após carregar os dados
+                atualizarVisualizacaoZoom();
+
+            } catch (erroDB) {
+                console.error("Erro no BD:", erroDB);
+                alert("Falha ao carregar pontos do banco de dados.");
+            }
+        }
+
+        // 7. FUNÇÕES DOS BOTÕES DENTRO DO POPUP
+        window.tracarRota = function(latDestino, lngDestino) {
+            if (controleRota) { map.removeControl(controleRota); }
+
+            navigator.geolocation.getCurrentPosition(position => {
+                const latOrigem = position.coords.latitude;
+                const lngOrigem = position.coords.longitude;
+
+                controleRota = L.Routing.control({
+                    waypoints: [ L.latLng(latOrigem, lngOrigem), L.latLng(latDestino, lngDestino) ],
+                    routeWhileDragging: true,
+                    language: 'pt',
+                    show: false,
+                    router: L.Routing.osrmv1({ serviceUrl: 'https://router.project-osrm.org/route/v1' })
+                }).addTo(map);
+            }, () => {
+                alert("Permissão de localização é necessária para traçar a rota.");
             });
         }
 
-        // 5. EVENTO: SALVAR NOVO PONTO NO BANCO
+        window.deletarPonto = async function(id) {
+            if (confirm("Excluir este ecoponto?")) {
+                const { error } = await supabaseClient.from('pontos_de_coleta').delete().eq('id', id);
+                if (error) alert("Erro: " + error.message);
+                else carregarPontos(); 
+            }
+        }
+
+        window.prepararEdicao = function(id) {
+            const ponto = pontosGlobais.find(p => p.id === id);
+            if (!ponto) return;
+            idEditando = id;
+            document.getElementById('tituloForm').innerText = "Editar Ecoponto";
+            document.getElementById('btnSalvar').innerText = "Atualizar Ponto";
+            document.getElementById('btnCancelarEdicao').style.display = "block";
+            document.getElementById('nome').value = ponto.nome;
+            document.getElementById('endereco').value = ponto.endereco;
+            document.getElementById('latitude').value = ponto.latitude;
+            document.getElementById('longitude').value = ponto.longitude;
+            document.getElementById('materiais').value = ponto.materiais;
+            document.getElementById('horario').value = ponto.horario;
+        }
+
+        window.cancelarEdicao = function() {
+            idEditando = null;
+            document.getElementById('tituloForm').innerText = "Cadastrar Ecoponto";
+            document.getElementById('btnSalvar').innerText = "Salvar no Banco";
+            document.getElementById('btnCancelarEdicao').style.display = "none";
+            document.getElementById('formCadastro').reset();
+            if (marcadorTemporario) { map.removeLayer(marcadorTemporario); } 
+        }
+
+        // 8. EVENTO DO FORMULÁRIO (SALVAR / ATUALIZAR)
         document.getElementById('formCadastro').addEventListener('submit', async function(e) {
-            e.preventDefault(); 
+            e.preventDefault(); // <- IMPEDE A PÁGINA DE RECARREGAR
             
             const btn = document.getElementById('btnSalvar');
-            btn.innerText = "Salvando...";
+            btn.innerText = "Processando...";
 
-            // Coleta os dados e força as coordenadas a serem números (float)
-            const novoPonto = {
+            const dadosPonto = {
                 nome: document.getElementById('nome').value,
                 endereco: document.getElementById('endereco').value,
                 latitude: parseFloat(document.getElementById('latitude').value),
@@ -154,25 +247,33 @@
                 horario: document.getElementById('horario').value
             };
 
-            console.log("Tentando enviar os seguintes dados:", novoPonto);
+            let erroDB = null;
 
-            const { data, error } = await supabaseClient.from('pontos_de_coleta').insert([novoPonto]);
-
-            if (error) {
-                // Agora o alerta vai mostrar EXATAMENTE o que o Supabase reclamou
-                alert("O Supabase recusou os dados. Erro: " + error.message);
-                console.error("ERRO COMPLETO DO SUPABASE:", error);
+            if (idEditando) {
+                const { error } = await supabaseClient.from('pontos_de_coleta').update(dadosPonto).eq('id', idEditando);
+                erroDB = error;
             } else {
-                alert("Ponto cadastrado com sucesso!");
-                document.getElementById('formCadastro').reset(); 
-                if (marcadorTemporario) { map.removeLayer(marcadorTemporario); } 
-                carregarPontos(); 
+                const { error } = await supabaseClient.from('pontos_de_coleta').insert([dadosPonto]);
+                erroDB = error;
+            }
+
+            if (erroDB) {
+                alert("Erro ao salvar: " + erroDB.message);
+            } else {
+                alert("Sucesso!");
+                cancelarEdicao();
+                carregarPontos();
             }
             
-            btn.innerText = "Salvar no Banco";
+            btn.innerText = idEditando ? "Atualizar Ponto" : "Salvar no Banco";
         });
 
+        // ==========================================
+        // INICIALIZAÇÃO DA APLICAÇÃO (START)
+        // ==========================================
+        iniciarLocalizacao();
         carregarPontos();
+
     </script>
 </body>
 </html>
